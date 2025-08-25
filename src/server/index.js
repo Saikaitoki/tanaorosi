@@ -1,19 +1,27 @@
+require('dotenv').config();
+// src/server/index.js
 const express = require('express');
 const path = require('path');
+const cors = require('cors');
 const proxyHandler = require('./proxy');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(require('cors')());
+// （.env を使うなら）require('dotenv').config();
 
-// 静的ファイルを src/public から配信
+app.use(cors());
+app.use(express.json());
+
+// 静的ファイル配信
 app.use('/', express.static(path.join(__dirname, '../public')));
 
-// kintone へ転送するエンドポイント
+// kintone 転送（単体/複数の両方をこの1ハンドラで）
 app.post('/kintone/record', proxyHandler);
+app.post('/kintone/records', proxyHandler);
 
 app.listen(PORT, () => {
-    console.log(`サーバー起動: http://localhost:${PORT}`);
+  console.log(`サーバー起動: http://localhost:${PORT}`);
 });
+
+

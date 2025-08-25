@@ -7,22 +7,27 @@
 </head>
 <body>
   <h1>棚卸入力</h1>
+
   <form id="form">
-    <label>JAN: <input id="jan" name="jan" required></label>
-    <label>数量: <input id="qty" name="qty" type="number" min="1" required></label>
-    <button type submit onclick ="add()">追加</button> 
-    
+    <label>JAN:
+      <input id="jan" name="jan" inputmode="numeric" pattern="\d{8,13}" required>
+    </label>
+    <label>数量:
+      <input id="qty" name="qty" type="number" min="1" required>
+    </label>
+    <!-- 追加は form の submit を使うので type="submit"、onclickは削除 -->
+    <button type="submit" id="addBtn">追加</button>
   </form>
 
-<table id="table">
+  <table id="table">
     <thead>
-        <tr><th>JAN</th><th>数量</th><th>削除</th></tr>
+      <tr><th>JAN</th><th>数量</th><th>削除</th></tr>
     </thead>
-    <tbody>
-    </tbody>
-</table>
+    <tbody></tbody>
+  </table>
 
-<button submit onclick="send()">送信</button>
+  <!-- 送信はフォーム送信にしたくないので type="button" -->
+  <button type="button" id="sendBtn">送信</button>
 
   <script src="./app.js"></script>
 </body>
