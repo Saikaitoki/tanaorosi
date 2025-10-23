@@ -257,8 +257,49 @@ html, body {
   -webkit-tap-highlight-color: transparent;/* iOSのタップハイライトを薄く（任意） */
 }
 
-/* 連打しやすい要素も明示（念のため） */
+/* 連打しやすい要素も明示 */
 button, a, [role="button"], input, label,
 .numpad__key, #sendBtn, #table .delete {
   touch-action: manipulation;
+}
+
+/* ログインカード（中央寄せ） */
+#login {
+  position: fixed; inset: 0; display: grid; place-items: center;
+  background: #f5f7fb;
+  z-index: 3000;
+}
+#login[hidden] { display: none; }
+.login-card{
+  width: min(92vw, 420px);
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.08);
+  padding: 20px;
+}
+.login-card h1{ font-size: 20px; margin: 0 0 12px; }
+.login-card label{ display:block; margin: 10px 0 14px; }
+.login-card input{
+  width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box;
+  border: 1px solid #cbd5e1; border-radius: 10px;
+}
+
+.operator-banner{
+  max-width: 960px; margin: 6px auto 0; padding: 6px 10px;
+  font-size: 13px; color: #334155;
+  background: #eef6ff; border: 1px solid #bfdcff; border-radius: 8px;
+}
+.operator-banner[hidden]{ display: none; }
+
+/* バナーを編集モード時に少し強調 */
+.operator-banner[data-editing="true"] { background: #e6f0ff; }
+
+/* インライン編集用の入力 */
+.operator-edit{
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid #bfdcff;
+  border-radius: 8px;
+  background: #fff;
 }
