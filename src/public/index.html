@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+<div id="operatorBanner" class="operator-banner" hidden></div>
+
   <form id="form">
     <label>JAN:
       <input id="jan" name="jan" inputmode="numeric" required>
@@ -58,6 +60,17 @@
     </div>
   </div>
 </div>
+
+<!-- ログイン（名前入力だけ） -->
+<section id="login" hidden>
+  <div class="login-card">
+    <h1>ログイン</h1>
+    <label>担当者名
+      <input id="userName" type="text" placeholder="担当者名" required>
+    </label>
+    <button id="startBtn" class="btn btn-primary" type="button">開始</button>
+  </div>
+</section>
 
 
   <script src="./app.js"></script>
