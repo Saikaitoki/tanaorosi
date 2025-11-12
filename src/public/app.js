@@ -1,9 +1,11 @@
 // src/public/app.js
 
 // ==== kintone フィールドコード ====
-const TABLE_CODE = 'subtable'; // サブテーブルのフィールドコード
-const JAN_CODE   = 'jan';      // サブテーブル内: 文字列(1行)
-const QTY_CODE   = 'qty';      // サブテーブル内: 数値
+// サブテーブル
+const TABLE_CODE = 'subtable';
+const JAN_CODE   = 'JAN';        // 文字列(1行)
+const QTY_CODE   = 'qty';        // 数値
+const NAME_CODE  = '';           // サブテーブルに「商品名」項目があるなら '商品名' に
 // ==================================
 
 const form    = document.getElementById('form');
@@ -12,41 +14,91 @@ const janEl   = document.getElementById('jan');
 const qtyEl   = document.getElementById('qty');
 const sendBtn = document.getElementById('sendBtn');
 
-// ===== 共通ユーティリティ =====
+// ===== 共通: 全角→半角 =====
 function toHalfWidth(s = ''){
-  return s
-    .replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
-    .replace(/\u3000/g, ' ')
-    .trim();
+  return s.replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+          .replace(/\u3000/g, ' ')
+          .trim();
 }
 
-// 入力：数字のみ＆長さ自由（桁数制限なし）
+// ===== ルックアップ（JAN→商品名） =====
+const lookupCache = new Map(); // jan -> { name, at }
+const LOOKUP_TTL_MS = 5 * 60 * 1000;
+
+let janHintEl = null;
+function ensureJanHint(){
+  if (janHintEl) return janHintEl;
+  janHintEl = document.createElement('div');
+  janHintEl.className = 'field-msg';
+  janEl.insertAdjacentElement('afterend', janHintEl);
+  return janHintEl;
+}
+
+async function lookupByJan(jan){
+  const now = Date.now();
+  const hit = lookupCache.get(jan);
+  if (hit && (now - hit.at) < LOOKUP_TTL_MS) return hit;
+
+  const r = await fetch(`/kintone/lookup?jan=${encodeURIComponent(jan)}`);
+  const data = await r.json();
+  if (!r.ok || !data.ok) {
+    const val = { name: '', at: now, error: data?.error || 'lookup failed' };
+    lookupCache.set(jan, val);
+    return val;
+  }
+  const val = { name: data.name || '', at: now };
+  lookupCache.set(jan, val);
+  return val;
+}
+
+async function updateJanPreview(){
+  const jan = toHalfWidth(janEl.value).replace(/\D/g, '');
+  ensureJanHint();
+  if (!jan) { janHintEl.textContent = ''; return; }
+  janHintEl.textContent = '検索中…';
+  try {
+    const { name, error } = await lookupByJan(jan);
+    if (error) janHintEl.textContent = '該当商品なし';
+    else janHintEl.textContent = name ? `商品名：${name}` : '該当商品なし';
+  } catch {
+    janHintEl.textContent = 'エラー';
+  }
+}
+
+// ===== 入力正規化（桁数自由・数字のみ） =====
 function normalizeJanInput(){
   const raw = toHalfWidth(janEl.value);
   const digits = raw.replace(/\D/g, '');
   if (digits !== janEl.value) janEl.value = digits;
 }
-janEl?.addEventListener('input', normalizeJanInput);
+janEl?.addEventListener('input', () => { normalizeJanInput(); updateJanPreview(); });
+janEl?.addEventListener('blur', updateJanPreview);
 
-// ===== 行追加（Enter/追加ボタン） =====
-form.addEventListener('submit', (e) => {
+// ===== 行追加（ルックアップ込み） =====
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const jan = toHalfWidth(janEl.value).replace(/\D/g, ''); // 数字のみ
+  const jan = toHalfWidth(janEl.value).replace(/\D/g, '');
   const qty = Number(qtyEl.value);
 
-  const janOk = /^\d+$/.test(jan);                  // 長さは不問（1桁以上）
-  const qtyOk = Number.isInteger(qty) && qty > 0;   // 1以上の整数
-
+  const janOk = /^\d+$/.test(jan);
+  const qtyOk = Number.isInteger(qty) && qty > 0;
   if (!janOk || !qtyOk) {
     alert('JANは数字のみ（桁数自由）、数量は1以上の整数で入力してください。');
     return;
   }
 
+  const { name } = await lookupByJan(jan);
+
   const tr = document.createElement('tr');
 
   const tdJan = document.createElement('td');
-  tdJan.textContent = jan;
+  const janMain = document.createElement('div');
+  janMain.textContent = jan;
+  const janSub = document.createElement('div');
+  janSub.textContent = name ? name : '（商品名なし）';
+  janSub.className = 'subtext';
+  tdJan.append(janMain, janSub);
 
   const tdQty = document.createElement('td');
   tdQty.textContent = String(qty);
@@ -58,26 +110,30 @@ form.addEventListener('submit', (e) => {
   btnDel.textContent = '削除';
   tdDel.appendChild(btnDel);
 
+  tr.dataset.jan = jan;
+  tr.dataset.name = name || '';
+
   tr.append(tdJan, tdQty, tdDel);
   tbody.prepend(tr);
 
   janEl.value = '';
   qtyEl.value = '';
+  if (janHintEl) janHintEl.textContent = '';
   janEl.focus();
 });
 
-// ===== 行削除（イベント委譲） =====
+// ===== 行削除 =====
 tbody.addEventListener('click', (e) => {
   if (e.target.matches('button.delete')) {
     e.target.closest('tr')?.remove();
   }
 });
 
-// ===== 担当者（ローカル保存 & バナー表示/編集） =====
+// ===== 担当者（ローカル保存 & バナー） =====
 const OP_KEY = 'tanaoroshi.operatorName';
-const loginSec     = document.getElementById('login');
-const startBtn     = document.getElementById('startBtn');
-const userNameEl   = document.getElementById('userName');
+const loginSec       = document.getElementById('login');
+const startBtn       = document.getElementById('startBtn');
+const userNameEl     = document.getElementById('userName');
 const operatorBanner = document.getElementById('operatorBanner');
 
 function getOperator(){ return (localStorage.getItem(OP_KEY) || '').trim(); }
@@ -86,12 +142,11 @@ function setOperator(name){ localStorage.setItem(OP_KEY, String(name).trim()); }
 function renderOperatorBanner() {
   const name = getOperator();
   operatorBanner.textContent = name ? `現在の担当者：${name}` : '現在の担当者：（未設定）';
-  operatorBanner.hidden = false; // 常時表示
+  operatorBanner.hidden = false;
 }
 
 function startOperatorEdit() {
   if (!operatorBanner || operatorBanner.dataset.editing === 'true') return;
-
   const current = getOperator();
   operatorBanner.dataset.editing = 'true';
 
@@ -109,12 +164,7 @@ function startOperatorEdit() {
     operatorBanner.dataset.editing = 'false';
     if (commit) {
       const v = (input.value || '').trim();
-      if (!v) {
-        alert('名前を入力してください。');
-        operatorBanner.dataset.editing = 'true';
-        input.focus();
-        return;
-      }
+      if (!v) { alert('名前を入力してください。'); operatorBanner.dataset.editing = 'true'; input.focus(); return; }
       setOperator(v);
     }
     renderOperatorBanner();
@@ -126,11 +176,9 @@ function startOperatorEdit() {
   });
   input.addEventListener('blur', () => finish(true));
 }
-
 operatorBanner?.addEventListener('click', startOperatorEdit);
 
 function showMainUI(){
-  // ログインを隠し、メインUIを表示
   if (loginSec) loginSec.hidden = true;
   document.getElementById('form').style.visibility = 'visible';
   document.getElementById('table').style.visibility = 'visible';
@@ -139,7 +187,6 @@ function showMainUI(){
   renderOperatorBanner();
 }
 
-// 初期表示：担当者未設定ならログインを出す
 window.addEventListener('DOMContentLoaded', () => {
   const op = getOperator();
   if (!op && loginSec) {
@@ -154,48 +201,42 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// 開始（担当者保存→メイン表示）
 startBtn?.addEventListener('click', () => {
   const name = (userNameEl?.value || '').trim();
-  if (!name){
-    alert('名前を入力してください。');
-    userNameEl?.focus();
-    return;
-  }
+  if (!name){ alert('名前を入力してください。'); userNameEl?.focus(); return; }
   setOperator(name);
   showMainUI();
 });
 
-// ===== 送信：サブテーブル + 担当者 =====
+// ===== 送信（サブテーブル + 担当者 + 任意で商品名） =====
 sendBtn.addEventListener('click', async () => {
   const rows = Array.from(tbody.querySelectorAll('tr'));
-  if (rows.length === 0) {
-    alert('送信する行がありません。');
-    return;
-  }
+  if (rows.length === 0) { alert('送信する行がありません。'); return; }
 
   const tableRows = rows.map((tr) => {
-    const [janCell, qtyCell] = tr.querySelectorAll('td');
-    const jan = (janCell?.textContent || '').trim();
-    const qty = Number((qtyCell?.textContent || '').trim());
-    return {
+    const jan = tr.dataset.jan || '';
+    const qty = Number((tr.querySelectorAll('td')[1]?.textContent || '').trim());
+    const name = tr.dataset.name || '';
+
+    const obj = {
       value: {
         [JAN_CODE]: { value: String(jan) },
         [QTY_CODE]: { value: String(qty) }
       }
     };
+    if (NAME_CODE) obj.value[NAME_CODE] = { value: name };
+    return obj;
   });
 
-  const op = getOperator(); // ★ 未定義対策：ここで取得
+  const op = getOperator();
   const payload = {
-    // app はサーバ(proxy)で .env の KINTONE_APP_ID を補完想定
     record: {
       [TABLE_CODE]: { value: tableRows },
-      '担当者': { value: op || '' } // フィールドコード「担当者」（文字列1行想定）
+      '担当者': { value: op || '' }
     }
   };
 
-  sendBtn.disabled = true; // 二重送信防止
+  sendBtn.disabled = true;
   try {
     console.log('payload', JSON.stringify(payload, null, 2));
     const res = await fetch('/kintone/record', {
@@ -203,13 +244,8 @@ sendBtn.addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
     const data = await res.json();
-    if (!res.ok) {
-      const msg = data?.message || data?.code || JSON.stringify(data);
-      throw new Error(msg);
-    }
-
+    if (!res.ok) throw new Error(data?.message || data?.code || JSON.stringify(data));
     alert('送信成功');
     tbody.innerHTML = '';
     janEl.focus();
@@ -221,7 +257,16 @@ sendBtn.addEventListener('click', async () => {
   }
 });
 
-// ===== ページ内テンキー（数量 #qty 用） =====
+// ===== 送信バー高さの反映 =====
+function syncActionBarSpace() {
+  const bar = document.querySelector('.action-bar');
+  const h = bar ? bar.offsetHeight : 0;
+  document.documentElement.style.setProperty('--action-bar-space', `${h}px`);
+}
+window.addEventListener('load', syncActionBarSpace);
+window.addEventListener('resize', syncActionBarSpace);
+
+// ===== テンキー（数量 #qty 用） =====
 (() => {
   const numpad = document.getElementById('numpad');
   const sheet  = numpad?.querySelector('.numpad__sheet');
@@ -240,33 +285,48 @@ sendBtn.addEventListener('click', async () => {
     numpad.setAttribute('aria-hidden','true');
     activeInput = null;
   }
-  function insertText(t){
-    if (!activeInput) return;
-    const el = activeInput;
-    const v = el.value;
+  // 置き換え：number型でも動くようにフォールバック
+function insertText(t){
+  if (!activeInput) return;
+  const el = activeInput;
+  const v = el.value ?? '';
+
+  if (el.type === 'number' || typeof el.setSelectionRange !== 'function') {
+    // number はキャレット操作NG → 末尾に追記
+    el.value = v + t;
+  } else {
     const start = el.selectionStart ?? v.length;
     const end   = el.selectionEnd ?? v.length;
     el.value = v.slice(0, start) + t + v.slice(end);
     const pos = start + t.length;
-    el.setSelectionRange(pos, pos);
-    el.dispatchEvent(new Event('input', { bubbles: true }));
+    try { el.setSelectionRange(pos, pos); } catch {}
   }
-  function backspace(){
-    if (!activeInput) return;
-    const el = activeInput;
-    const v = el.value;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function backspace(){
+  if (!activeInput) return;
+  const el = activeInput;
+  const v = el.value ?? '';
+
+  if (el.type === 'number' || typeof el.setSelectionRange !== 'function') {
+    // number は末尾1文字削除で妥協
+    el.value = v.slice(0, -1);
+  } else {
     const start = el.selectionStart ?? v.length;
     const end   = el.selectionEnd ?? v.length;
     if (start === end && start > 0){
       el.value = v.slice(0, start - 1) + v.slice(end);
       const pos = start - 1;
-      el.setSelectionRange(pos, pos);
+      try { el.setSelectionRange(pos, pos); } catch {}
     } else {
       el.value = v.slice(0, start) + v.slice(end);
-      el.setSelectionRange(start, start);
+      try { el.setSelectionRange(start, start); } catch {}
     }
-    el.dispatchEvent(new Event('input', { bubbles: true }));
   }
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 
   qty.addEventListener('focus', () => openPad(qty));
   qty.addEventListener('click', () => openPad(qty));
@@ -274,17 +334,11 @@ sendBtn.addEventListener('click', async () => {
   numpad.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
-
     const key = btn.dataset.key;
     const act = btn.dataset.action;
     if (key) insertText(key);
     else if (act === 'backspace') backspace();
-    else if (act === 'clear') {
-      if (activeInput) {
-        activeInput.value = '';
-        activeInput.dispatchEvent(new Event('input',{bubbles:true}));
-      }
-    }
+    else if (act === 'clear') { if (activeInput) { activeInput.value = ''; activeInput.dispatchEvent(new Event('input',{bubbles:true})); } }
     else if (act === 'done') closePad();
   });
 
@@ -298,12 +352,3 @@ sendBtn.addEventListener('click', async () => {
     if (e.key === 'Escape' && numpad.classList.contains('is-open')) closePad();
   });
 })();
-
-// ===== 送信バー高さの反映 =====
-function syncActionBarSpace() {
-  const bar = document.querySelector('.action-bar');
-  const h = bar ? bar.offsetHeight : 0;
-  document.documentElement.style.setProperty('--action-bar-space', `${h}px`);
-}
-window.addEventListener('load', syncActionBarSpace);
-window.addEventListener('resize', syncActionBarSpace);
