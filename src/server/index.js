@@ -1,27 +1,36 @@
-require('dotenv').config();
 // src/server/index.js
-const express = require('express');
 const path = require('path');
-const cors = require('cors');
-const proxyHandler = require('./proxy');
+
+require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
+
+const express = require('express');
+const { proxyHandler, kintoneRouter } = require('./proxy');
+
+
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// （.env を使うなら）require('dotenv').config();
-
-app.use(cors());
 app.use(express.json());
 
-// 静的ファイル配信
-app.use('/', express.static(path.join(__dirname, '../public')));
+// 静的配信（/ → src/public）
+app.use('/', express.static(path.join(__dirname, '..', 'public')));
 
-// kintone 転送（単体/複数の両方をこの1ハンドラで）
+// ルックアップAPIを /kintone にマウント
+app.use('/kintone', kintoneRouter);
+
+// レコード作成プロキシ
 app.post('/kintone/record', proxyHandler);
-app.post('/kintone/records', proxyHandler);
 
-app.listen(PORT, () => {
-  console.log(`サーバー起動: http://localhost:${PORT}`);
+// ヘルスチェック
+app.get('/healthz', (_req, res) => res.json({ ok: true }));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`listening on http://localhost:${PORT}`));
+
+// src/server/index.js
+app.get('/debug/env', (_req, res) => {
+  res.json({
+    KINTONE_DOMAIN: process.env.KINTONE_DOMAIN,
+    KINTONE_MASTER_APP_ID: process.env.KINTONE_MASTER_APP_ID,
+    HAS_MASTER_TOKEN: Boolean(process.env.KINTONE_MASTER_API_TOKEN)
+  });
 });
-
-
