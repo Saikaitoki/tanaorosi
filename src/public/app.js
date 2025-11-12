@@ -5,7 +5,7 @@
 const TABLE_CODE = 'subtable';
 const JAN_CODE   = 'JAN';        // 文字列(1行)
 const QTY_CODE   = 'qty';        // 数値
-const NAME_CODE  = '';           // サブテーブルに「商品名」項目があるなら '商品名' に
+const NAME_CODE  = '商品名';     // ★ サブテーブルの「商品名」（文字列1行）に送る
 // ==================================
 
 const form    = document.getElementById('form');
@@ -74,7 +74,7 @@ function normalizeJanInput(){
 janEl?.addEventListener('input', () => { normalizeJanInput(); updateJanPreview(); });
 janEl?.addEventListener('blur', updateJanPreview);
 
-// ===== 行追加（ルックアップ込み） =====
+// ===== 行追加（ルックアップ込み、失敗しても続行） =====
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -88,21 +88,37 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  const { name } = await lookupByJan(jan);
+  // 商品名は取得できなくても追加を続行
+  let name = '';
+  try {
+    const res = await lookupByJan(jan);
+    name = res?.name || '';
+  } catch (_) {
+    name = '';
+  }
 
   const tr = document.createElement('tr');
 
+  // --- JANセル：上段にJAN、下段に「商品名」入力欄（編集可能） ---
   const tdJan = document.createElement('td');
+
   const janMain = document.createElement('div');
   janMain.textContent = jan;
-  const janSub = document.createElement('div');
-  janSub.textContent = name ? name : '（商品名なし）';
-  janSub.className = 'subtext';
-  tdJan.append(janMain, janSub);
 
+  const nameInput = document.createElement('input'); // ★ 編集可能
+  nameInput.type = 'text';
+  nameInput.className = 'name-input';
+  nameInput.placeholder = '商品名…';
+  nameInput.value = name || '';
+  nameInput.autocomplete = 'off';
+
+  tdJan.append(janMain, nameInput);
+
+  // --- 数量 ---
   const tdQty = document.createElement('td');
   tdQty.textContent = String(qty);
 
+  // --- 削除 ---
   const tdDel = document.createElement('td');
   const btnDel = document.createElement('button');
   btnDel.type = 'button';
@@ -110,12 +126,13 @@ form.addEventListener('submit', async (e) => {
   btnDel.textContent = '削除';
   tdDel.appendChild(btnDel);
 
+  // 送信時に拾いやすいようJANだけ持たせる（商品名は入力から拾う）
   tr.dataset.jan = jan;
-  tr.dataset.name = name || '';
 
   tr.append(tdJan, tdQty, tdDel);
   tbody.prepend(tr);
 
+  // 入力欄クリア
   janEl.value = '';
   qtyEl.value = '';
   if (janHintEl) janHintEl.textContent = '';
@@ -208,23 +225,23 @@ startBtn?.addEventListener('click', () => {
   showMainUI();
 });
 
-// ===== 送信（サブテーブル + 担当者 + 任意で商品名） =====
+// ===== 送信（サブテーブル + 担当者 + 商品名） =====
 sendBtn.addEventListener('click', async () => {
   const rows = Array.from(tbody.querySelectorAll('tr'));
   if (rows.length === 0) { alert('送信する行がありません。'); return; }
 
   const tableRows = rows.map((tr) => {
-    const jan = tr.dataset.jan || '';
+    const jan = tr.dataset.jan || (tr.querySelector('td:nth-child(1) div')?.textContent || '').trim();
     const qty = Number((tr.querySelectorAll('td')[1]?.textContent || '').trim());
-    const name = tr.dataset.name || '';
+    const name = (tr.querySelector('.name-input')?.value || '').trim(); // ★ 編集された商品名を取得
 
     const obj = {
       value: {
-        [JAN_CODE]: { value: String(jan) },
-        [QTY_CODE]: { value: String(qty) }
+        [JAN_CODE]:  { value: String(jan) },
+        [QTY_CODE]:  { value: String(qty) },
+        [NAME_CODE]: { value: name }              // ★ サブテーブル「商品名」に送る
       }
     };
-    if (NAME_CODE) obj.value[NAME_CODE] = { value: name };
     return obj;
   });
 
@@ -285,48 +302,46 @@ window.addEventListener('resize', syncActionBarSpace);
     numpad.setAttribute('aria-hidden','true');
     activeInput = null;
   }
-  // 置き換え：number型でも動くようにフォールバック
-function insertText(t){
-  if (!activeInput) return;
-  const el = activeInput;
-  const v = el.value ?? '';
 
-  if (el.type === 'number' || typeof el.setSelectionRange !== 'function') {
-    // number はキャレット操作NG → 末尾に追記
-    el.value = v + t;
-  } else {
-    const start = el.selectionStart ?? v.length;
-    const end   = el.selectionEnd ?? v.length;
-    el.value = v.slice(0, start) + t + v.slice(end);
-    const pos = start + t.length;
-    try { el.setSelectionRange(pos, pos); } catch {}
-  }
-  el.dispatchEvent(new Event('input', { bubbles: true }));
-}
+  // number型でも動くようにフォールバック
+  function insertText(t){
+    if (!activeInput) return;
+    const el = activeInput;
+    const v = el.value ?? '';
 
-function backspace(){
-  if (!activeInput) return;
-  const el = activeInput;
-  const v = el.value ?? '';
-
-  if (el.type === 'number' || typeof el.setSelectionRange !== 'function') {
-    // number は末尾1文字削除で妥協
-    el.value = v.slice(0, -1);
-  } else {
-    const start = el.selectionStart ?? v.length;
-    const end   = el.selectionEnd ?? v.length;
-    if (start === end && start > 0){
-      el.value = v.slice(0, start - 1) + v.slice(end);
-      const pos = start - 1;
-      try { el.setSelectionRange(pos, pos); } catch {}
+    if (el.type === 'number' || typeof el.setSelectionRange !== 'function') {
+      el.value = v + t; // number は末尾追記
     } else {
-      el.value = v.slice(0, start) + v.slice(end);
-      try { el.setSelectionRange(start, start); } catch {}
+      const start = el.selectionStart ?? v.length;
+      const end   = el.selectionEnd ?? v.length;
+      el.value = v.slice(0, start) + t + v.slice(end);
+      const pos = start + t.length;
+      try { el.setSelectionRange(pos, pos); } catch {}
     }
+    el.dispatchEvent(new Event('input', { bubbles: true }));
   }
-  el.dispatchEvent(new Event('input', { bubbles: true }));
-}
 
+  function backspace(){
+    if (!activeInput) return;
+    const el = activeInput;
+    const v = el.value ?? '';
+
+    if (el.type === 'number' || typeof el.setSelectionRange !== 'function') {
+      el.value = v.slice(0, -1); // number は末尾1文字削除
+    } else {
+      const start = el.selectionStart ?? v.length;
+      const end   = el.selectionEnd ?? v.length;
+      if (start === end && start > 0){
+        el.value = v.slice(0, start - 1) + v.slice(end);
+        const pos = start - 1;
+        try { el.setSelectionRange(pos, pos); } catch {}
+      } else {
+        el.value = v.slice(0, start) + v.slice(end);
+        try { el.setSelectionRange(start, start); } catch {}
+      }
+    }
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
 
   qty.addEventListener('focus', () => openPad(qty));
   qty.addEventListener('click', () => openPad(qty));
