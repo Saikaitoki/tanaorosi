@@ -85,3 +85,54 @@ body { padding-bottom: calc(var(--action-bar-space) + env(safe-area-inset-bottom
   font-size:12px; opacity:.8;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
+
+/* レイヤー順を明示：送信バー ＞ テンキー */
+:root{
+  --action-bar-space: 72px;   /* JSで実寸を入れている想定 */
+  --numpad-space: 0px;
+  --z-action-bar: 3000;       /* ← 送信バーを最前面に */
+  --z-numpad: 2000;           /* ← テンキーはその下 */
+}
+
+/* 本文は両方ぶんの高さを確保（そのままでOK） */
+body{
+  padding-bottom: calc(var(--action-bar-space) + var(--numpad-space) + env(safe-area-inset-bottom));
+}
+
+/* 送信バー：最下端・最前面 */
+.action-bar{
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: var(--z-action-bar);
+}
+
+/* テンキー：送信バーの“上にドッキング”するが、レイヤーは下 */
+.numpad{
+  position: fixed;
+  left: 0; right: 0;
+  bottom: var(--action-bar-space);   /* 送信バーの直上に表示 */
+  z-index: var(--z-numpad);          /* ← バーより下の層 */
+  transform: translateY(100%);
+  transition: transform .18s ease-out;
+  pointer-events: none;
+}
+.numpad.is-open{
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* テーブル内の商品名入力の見た目 */
+#table .name-input{
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  padding: 6px 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+#table .name-input:focus{
+  outline: 0;
+  box-shadow: 0 0 0 2px rgba(11,121,208,.15);
+}
