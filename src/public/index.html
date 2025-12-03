@@ -2,32 +2,84 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>棚卸 - サンプル</title>
   <link rel="stylesheet" href="./styles.css">
+  <meta name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
 </head>
 <body>
-  <h1>棚卸入力</h1>
+<div id="operatorBanner" class="operator-banner" hidden></div>
 
   <form id="form">
     <label>JAN:
-      <input id="jan" name="jan" inputmode="numeric" pattern="\d{8,13}" required>
+      <input id="jan" name="jan" inputmode="numeric" required>
     </label>
     <label>数量:
       <input id="qty" name="qty" type="number" min="1" required>
-    </label>
-    <!-- 追加は form の submit を使うので type="submit"、onclickは削除 -->
-    <button type="submit" id="addBtn">追加</button>
+    </label> 
+    <div class="action-bar__inner">
+    <button type="submit" class="btn btn-primary"form ="form">追加</button>
+    </div>
   </form>
 
-  <table id="table">
-    <thead>
-      <tr><th>JAN</th><th>数量</th><th>削除</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<table id="table">
+  <colgroup>
+    <col class="col-jan">
+    <col class="col-qty">
+    <col class="col-del">
+  </colgroup>
+  <thead>
+    <tr><th>JAN</th><th>数量</th><th>削除</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-  <!-- 送信はフォーム送信にしたくないので type="button" -->
-  <button type="button" id="sendBtn">送信</button>
+<!-- 下部固定バー -->
+<div class="action-bar" role="region" aria-label="操作バー">
+  <div class="action-bar__inner">
+    <button id="sendBtn" type="button" class="btn btn-primary">送信</button>
+  </div>
+</div>
+
+  <!-- ページ内テンキー -->
+<div id="numpad" class="numpad" aria-hidden="true">
+  <div class="numpad__sheet" role="dialog" aria-label="数字キーボード" aria-modal="false">
+    <div class="numpad__grid">
+      <button type="button" class="numpad__key" data-key="1">1</button>
+      <button type="button" class="numpad__key" data-key="2">2</button>
+      <button type="button" class="numpad__key" data-key="3">3</button>
+
+      <button type="button" class="numpad__key" data-key="4">4</button>
+      <button type="button" class="numpad__key" data-key="5">5</button>
+      <button type="button" class="numpad__key" data-key="6">6</button>
+
+      <button type="button" class="numpad__key" data-key="7">7</button>
+      <button type="button" class="numpad__key" data-key="8">8</button>
+      <button type="button" class="numpad__key" data-key="9">9</button>
+
+      <button type="button" class="numpad__key" data-action="clear">C</button>
+      <button type="button" class="numpad__key" data-key="0">0</button>
+      <button type="button" class="numpad__key" data-action="backspace">⌫</button>
+    </div>
+    <div class="numpad__actions">
+      <button type="button" class="btn btn-primary" data-action="done">完了</button>
+    </div>
+  </div>
+</div>
+
+<!-- ログイン（名前入力だけ） -->
+<section id="login" hidden>
+  <div class="login-card">
+    <h1>ログイン</h1>
+    <label>担当者名
+      <input id="userName" type="text" placeholder="担当者名" required>
+    </label>
+    <button id="startBtn" class="btn btn-primary" type="button">開始</button>
+  </div>
+</section>
+
 
   <script src="./app.js"></script>
 </body>
