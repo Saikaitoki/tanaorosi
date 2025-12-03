@@ -367,3 +367,21 @@ window.addEventListener('resize', syncActionBarSpace);
     if (e.key === 'Escape' && numpad.classList.contains('is-open')) closePad();
   });
 })();
+
+// ==== ダブルタップズーム無効化（テンキー用） ====
+document.addEventListener('DOMContentLoaded', function () {
+  const numpad = document.getElementById('numpad');
+  if (!numpad) return;
+
+  let lastTouchEnd = 0;
+
+  numpad.addEventListener('touchend', function (e) {
+    const now = Date.now();
+
+    // 300ms以内の連続touchendをダブルタップとみなす
+    if (now - lastTouchEnd <= 300) {
+      e.preventDefault();   // ここでズームなどのデフォルト挙動をブロック
+    }
+    lastTouchEnd = now;
+  }, { passive: false });
+});
