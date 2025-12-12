@@ -1,0 +1,138 @@
+/* ========== ベース ========== */
+body { font-family: Meiryo, sans-serif; padding: 8px; }
+form label { display: block; margin: 8px 0; }
+table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+
+button.delete { padding: 4px 8px; }
+.actions { display:flex; justify-content:flex-end; margin-top:12px; }
+
+/* ========== 入力フォームの枠（元のまま） ========== */
+#form {
+  border: 3px solid #999;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 8px 0;
+  background: #fff;
+  max-width: 720px;
+}
+#form label { display:block; margin: 12px 0; font-size: 16px; }
+#form input {
+  width: 100%;
+  max-width: 360px;
+  padding: 10px 12px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* ========== ボタン（元のまま） ========== */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:44px; min-height:44px;
+  padding:12px 18px; font-size:16px; line-height:1;
+  border-radius:12px; border:1px solid transparent;
+  touch-action: manipulation;
+}
+.btn-primary{ background:#0b79d0; color:#fff; border-color:#0b79d0; }
+.btn-primary:hover{ filter: brightness(0.97); }
+.btn-primary:active{ transform: translateY(1px); }
+.btn:disabled{ opacity:.55; cursor:not-allowed; }
+@media (pointer: coarse){ .btn{ min-height:48px; padding:14px 20px; } }
+
+/* ========== 下部固定バー（元のまま） ========== */
+:root { --action-bar-space: 72px; }
+body { padding-bottom: calc(var(--action-bar-space) + env(safe-area-inset-bottom)); }
+.action-bar {
+  position: fixed; left:0; right:0; bottom:0; z-index:1000;
+  background:#fff; border-top:1px solid #e5e5e5; box-shadow:0 -4px 12px rgba(0,0,0,.06);
+  padding:8px 12px; padding-bottom:calc(8px + env(safe-area-inset-bottom));
+}
+.action-bar__inner { max-width:960px; margin:0 auto; display:flex; justify-content:flex-end; gap:12px; }
+
+/* ========== テンキー（元のまま） ========== */
+:root { --z-action-bar:2000; --z-numpad:1500; --action-bar-space:0px; }
+.numpad{
+  position: fixed; left:0; right:0; bottom:var(--action-bar-space);
+  z-index: var(--z-numpad);
+  transform: translateY(100%); transition: transform .18s ease-out;
+  pointer-events: none;
+}
+.numpad.is-open{ transform:translateY(0); pointer-events:auto; }
+.numpad__sheet{ margin:0 auto; max-width:960px; background:#fff; border-top:1px solid #e5e5e5; box-shadow:0 -6px 16px rgba(0,0,0,.08); padding:8px 12px calc(8px + env(safe-area-inset-bottom)); }
+.numpad__grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.numpad__key{ min-height:48px; font-size:18px; border-radius:12px; border:1px solid #ddd; background:#f7f7f7; }
+.numpad__key:active{ transform: translateY(1px); }
+.numpad__actions{ display:flex; justify-content:flex-end; margin-top:8px; }
+
+/* ========== ここから “最小限だけ” のテーブル調整 ========== */
+/* ヘッダー中央寄せ（折返し防止） */
+#table thead th { text-align: center; white-space: nowrap; }
+
+/* 数量・削除の列幅を最小限だけ指定（JANは残りを使う） */
+.col-qty { width: 5.5ch; }   /* 3桁想定 */
+.col-del { width: 72px; }    /* ボタンがちょうど入る幅（64–80pxで微調整可） */
+
+/* 数量・削除セルは水平中央寄せ、JANは左寄せ */
+#table tbody td:nth-child(1){ text-align:left; }
+#table tbody td:nth-child(2),
+#table tbody td:nth-child(3){ text-align:center; }
+
+/* 行の縦位置は自然に（枠線は元のまま） */
+#table td { vertical-align: middle; }
+
+/* 商品名のサブテキストだけ少し小さく */
+#table td .subtext{
+  font-size:12px; opacity:.8;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* レイヤー順を明示：送信バー ＞ テンキー */
+:root{
+  --action-bar-space: 72px;   /* JSで実寸を入れている想定 */
+  --numpad-space: 0px;
+  --z-action-bar: 3000;       /* ← 送信バーを最前面に */
+  --z-numpad: 2000;           /* ← テンキーはその下 */
+}
+
+/* 本文は両方ぶんの高さを確保（そのままでOK） */
+body{
+  padding-bottom: calc(var(--action-bar-space) + var(--numpad-space) + env(safe-area-inset-bottom));
+}
+
+/* 送信バー：最下端・最前面 */
+.action-bar{
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: var(--z-action-bar);
+}
+
+/* テンキー：送信バーの“上にドッキング”するが、レイヤーは下 */
+.numpad{
+  position: fixed;
+  left: 0; right: 0;
+  bottom: var(--action-bar-space);   /* 送信バーの直上に表示 */
+  z-index: var(--z-numpad);          /* ← バーより下の層 */
+  transform: translateY(100%);
+  transition: transform .18s ease-out;
+  pointer-events: none;
+}
+.numpad.is-open{
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* テーブル内の商品名入力の見た目 */
+#table .name-input{
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  padding: 6px 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+#table .name-input:focus{
+  outline: 0;
+  box-shadow: 0 0 0 2px rgba(11,121,208,.15);
+}
