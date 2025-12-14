@@ -12,7 +12,19 @@ const app = express();
 app.use(express.json());
 
 // 静的配信（/ → src/public）
-app.use('/', express.static(path.join(__dirname, '..', 'client', 'dist')));
+const staticPath = path.join(__dirname, '..', 'client', 'dist');
+console.log('Static Path:', staticPath);
+try {
+  const fs = require('fs');
+  if (fs.existsSync(staticPath)) {
+    console.log('Files in static path:', fs.readdirSync(staticPath));
+  } else {
+    console.log('Static path DOES NOT EXIST!');
+  }
+} catch (e) {
+  console.error('Error checking static path:', e);
+}
+app.use('/', express.static(staticPath));
 
 // ルックアップAPIを /kintone にマウント
 app.use('/kintone', kintoneRouter);
