@@ -293,10 +293,10 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
                         <tr>
-                            <th className="p-3 w-12 font-semibold text-center text-gray-400">No.</th>
-                            <th className="p-3 font-semibold">JAN / 商品名</th>
-                            <th className="p-3 font-semibold text-right w-20">数量</th>
-                            <th className="p-3 w-12"></th>
+                            <th className="p-2 w-10 font-semibold text-center text-gray-400">No.</th>
+                            <th className="p-2 font-semibold">JAN / 商品名</th>
+                            <th className="p-2 font-semibold text-right w-14">数量</th>
+                            <th className="p-2 w-10"></th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -309,10 +309,10 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                         ) : (
                             items.map((item, idx) => (
                                 <tr key={item.id} className={clsx("group active:bg-blue-50 transition-colors", idx === 0 ? "bg-blue-50/50" : "")}>
-                                    <td className="p-3 text-center text-gray-400 font-mono text-xs align-top pt-4">
+                                    <td className="p-2 text-center text-gray-400 font-mono text-xs align-top pt-3">
                                         {items.length - idx}
                                     </td>
-                                    <td className="p-3 align-top">
+                                    <td className="p-2 align-top">
                                         <div className="font-mono text-gray-900 font-medium">{item.jan}</div>
                                         <input
                                             type="text"
@@ -322,7 +322,7 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                                             placeholder="商品名..."
                                         />
                                     </td>
-                                    <td className="p-3 text-right font-mono text-lg font-bold text-gray-800">
+                                    <td className="p-2 text-right font-mono text-lg font-bold text-gray-800">
                                         <input
                                             type="number"
                                             inputMode={qtyInputMode}
@@ -339,10 +339,10 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                                                 setActiveInputId(item.id);
                                                 if (deviceMode === 'ios') setShowNumpad(true);
                                             }}
-                                            className="w-20 text-right bg-transparent border-b border-transparent focus:border-blue-500 outline-none"
+                                            className="w-14 text-right bg-transparent border-b border-transparent focus:border-blue-500 outline-none p-0"
                                         />
                                     </td>
-                                    <td className="p-3 text-center">
+                                    <td className="p-2 text-center">
                                         <button
                                             onClick={() => onDelete(item.id)}
                                             className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"

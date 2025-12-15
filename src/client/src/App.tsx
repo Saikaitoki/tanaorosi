@@ -45,7 +45,7 @@ function App() {
       />
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto p-4 flex flex-col gap-4">
+      <main className="max-w-3xl mx-auto p-2 sm:p-4 flex flex-col gap-4">
         {/* Actions Bar (Undo/Clear/Settings) */}
         <div className="flex justify-between items-center">
           <h1 className="text-xl font-bold text-gray-700">棚卸しリスト ({items.length}件)</h1>
