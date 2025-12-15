@@ -44,6 +44,7 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
     const qtyInputRef = useRef<HTMLInputElement>(null);
     const [showNumpad, setShowNumpad] = useState(false);
     const [activeInputId, setActiveInputId] = useState<string | null>(null);
+    const [editValue, setEditValue] = useState<string>('');
 
 
     // Helper: Focus JAN
@@ -159,12 +160,16 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
     const onNumpadInput = (char: string) => {
         if (activeInputId) {
             // Edit existing item
-            const item = items.find(i => i.id === activeInputId);
-            if (item) {
-                const newQty = parseInt((item.qty.toString() + char), 10);
-                if (!isNaN(newQty)) {
-                    onUpdate(activeInputId, { qty: newQty });
-                }
+            let next = editValue + char;
+            // Sanitize leading zero (e.g. "05" -> "5")
+            if (next.length > 1 && next.startsWith('0')) {
+                next = next.replace(/^0+/, '');
+            }
+            setEditValue(next);
+            // Update item (empty -> 0)
+            const newQty = next === '' ? 0 : parseInt(next, 10);
+            if (!isNaN(newQty)) {
+                onUpdate(activeInputId, { qty: newQty });
             }
         } else {
             // Add new item
@@ -173,19 +178,17 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
     };
     const onNumpadBackspace = () => {
         if (activeInputId) {
-            const item = items.find(i => i.id === activeInputId);
-            if (item) {
-                const cur = item.qty.toString();
-                const nextStr = cur.slice(0, -1);
-                const nextVal = nextStr === '' ? 0 : parseInt(nextStr, 10);
-                onUpdate(activeInputId, { qty: nextVal });
-            }
+            const next = editValue.slice(0, -1);
+            setEditValue(next);
+            const val = next === '' ? 0 : parseInt(next, 10);
+            onUpdate(activeInputId, { qty: val });
         } else {
             setQty(prev => prev.slice(0, -1));
         }
     };
     const onNumpadClear = () => {
         if (activeInputId) {
+            setEditValue('');
             onUpdate(activeInputId, { qty: 0 });
         } else {
             setQty('');
@@ -326,17 +329,24 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                                         <input
                                             type="number"
                                             inputMode={qtyInputMode}
-                                            value={item.qty}
+                                            value={activeInputId === item.id ? editValue : item.qty}
                                             onChange={(e) => {
-                                                const v = parseInt(e.target.value, 10);
-                                                onUpdate(item.id, { qty: isNaN(v) ? 0 : v });
+                                                let v = e.target.value;
+                                                // Sanitize leading zero
+                                                if (v.length > 1 && v.startsWith('0')) {
+                                                    v = v.replace(/^0+/, '');
+                                                }
+                                                setEditValue(v);
+                                                onUpdate(item.id, { qty: v === '' ? 0 : parseInt(v, 10) });
                                             }}
                                             onFocus={() => {
                                                 setActiveInputId(item.id);
+                                                setEditValue(item.qty.toString());
                                                 if (deviceMode === 'ios') setShowNumpad(true);
                                             }}
                                             onClick={() => {
                                                 setActiveInputId(item.id);
+                                                setEditValue(item.qty.toString());
                                                 if (deviceMode === 'ios') setShowNumpad(true);
                                             }}
                                             className="w-14 text-right bg-transparent border-b border-transparent focus:border-blue-500 outline-none p-0"
