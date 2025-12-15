@@ -183,7 +183,16 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                             type="text"
                             inputMode="none" // Scanner only!
                             value={jan}
-                            onChange={(e) => setJan(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                // Full-width to half-width
+                                const normalized = val.replace(/[０-９]/g, (s) =>
+                                    String.fromCharCode(s.charCodeAt(0) - 0xFEE0)
+                                );
+                                // Only numbers
+                                const numeric = normalized.replace(/[^0-9]/g, '');
+                                setJan(numeric);
+                            }}
                             onKeyDown={handleJanKeyDown}
                             placeholder="スキャン"
                             className="w-full text-lg p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
