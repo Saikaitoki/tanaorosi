@@ -43,6 +43,7 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
     const janInputRef = useRef<HTMLInputElement>(null);
     const qtyInputRef = useRef<HTMLInputElement>(null);
     const [showNumpad, setShowNumpad] = useState(false);
+    const [activeInputId, setActiveInputId] = useState<string | null>(null);
 
 
     // Helper: Focus JAN
@@ -124,6 +125,7 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
         // toast.success(`${jan} を追加しました`, { duration: 1500 }); // Optional, might be noisy
 
         // Reset but keep numpad open? No, close numpad and go to JAN
+        setActiveInputId(null);
         setShowNumpad(false);
         resetInput();
     };
@@ -155,13 +157,39 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
 
     // Numpad handlers
     const onNumpadInput = (char: string) => {
-        setQty(prev => prev + char);
+        if (activeInputId) {
+            // Edit existing item
+            const item = items.find(i => i.id === activeInputId);
+            if (item) {
+                const newQty = parseInt((item.qty.toString() + char), 10);
+                if (!isNaN(newQty)) {
+                    onUpdate(activeInputId, { qty: newQty });
+                }
+            }
+        } else {
+            // Add new item
+            setQty(prev => prev + char);
+        }
     };
     const onNumpadBackspace = () => {
-        setQty(prev => prev.slice(0, -1));
+        if (activeInputId) {
+            const item = items.find(i => i.id === activeInputId);
+            if (item) {
+                const cur = item.qty.toString();
+                const nextStr = cur.slice(0, -1);
+                const nextVal = nextStr === '' ? 0 : parseInt(nextStr, 10);
+                onUpdate(activeInputId, { qty: nextVal });
+            }
+        } else {
+            setQty(prev => prev.slice(0, -1));
+        }
     };
     const onNumpadClear = () => {
-        setQty('');
+        if (activeInputId) {
+            onUpdate(activeInputId, { qty: 0 });
+        } else {
+            setQty('');
+        }
     };
 
     // Toggle Input Mode
@@ -226,6 +254,7 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                             onKeyDown={handleQtyKeyDown}
                             onClick={() => {
                                 if (deviceMode === 'ios') setShowNumpad(true);
+                                setActiveInputId(null);
                             }}
                             placeholder="0"
                             className="w-full text-lg p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-right font-mono"
@@ -294,7 +323,24 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                                         />
                                     </td>
                                     <td className="p-3 text-right font-mono text-lg font-bold text-gray-800">
-                                        {item.qty}
+                                        <input
+                                            type="number"
+                                            inputMode={qtyInputMode}
+                                            value={item.qty}
+                                            onChange={(e) => {
+                                                const v = parseInt(e.target.value, 10);
+                                                if (!isNaN(v)) onUpdate(item.id, { qty: v });
+                                            }}
+                                            onFocus={() => {
+                                                setActiveInputId(item.id);
+                                                if (deviceMode === 'ios') setShowNumpad(true);
+                                            }}
+                                            onClick={() => {
+                                                setActiveInputId(item.id);
+                                                if (deviceMode === 'ios') setShowNumpad(true);
+                                            }}
+                                            className="w-20 text-right bg-transparent border-b border-transparent focus:border-blue-500 outline-none"
+                                        />
                                     </td>
                                     <td className="p-3 text-center">
                                         <button
@@ -338,7 +384,14 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                 onInput={onNumpadInput}
                 onBackspace={onNumpadBackspace}
                 onClear={onNumpadClear}
-                onEnter={handleAddItem}
+                onEnter={() => {
+                    if (activeInputId) {
+                        setShowNumpad(false);
+                        setActiveInputId(null);
+                    } else {
+                        handleAddItem();
+                    }
+                }}
             />
         </div>
     );
