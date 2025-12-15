@@ -1,4 +1,4 @@
-import { Delete, Check, X } from 'lucide-react';
+import { Delete, X, CornerDownLeft } from 'lucide-react';
 import clsx from 'clsx';
 
 interface Props {
@@ -42,9 +42,8 @@ export function Numpad({ onInput, onBackspace, onClear, onEnter, isOpen, onClose
                 {['1', '2', '3'].map(k => (
                     <button key={k} onClick={() => onInput(k)} className={btnClass}>{k}</button>
                 ))}
-                <button onClick={onEnter} className={clsx(btnClass, "row-span-2 bg-blue-600 text-white active:bg-blue-700 active:text-white border-blue-600 flex-col gap-1")} data-label="enter">
-                    <Check />
-                    <span className="text-xs">OK</span>
+                <button onClick={onEnter} className={clsx(btnClass, "row-span-2 bg-blue-600 text-white active:bg-blue-700 active:text-white border-blue-600")} data-label="enter">
+                    <CornerDownLeft size={32} />
                 </button>
 
                 <button onClick={() => onInput('0')} className={clsx(btnClass, "col-span-3")}>0</button>
