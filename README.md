@@ -1,7 +1,7 @@
 ### 環境変数（例）
 KINTONE_DOMAIN=example           # 例: example / example.kintone.com / https://example.kintone.com
 KINTONE_API_TOKEN=xxx
-KINTONE_APP_ID=123
+KINTONE_APP_ID=xxx
 
 ### 起動
 npm install
