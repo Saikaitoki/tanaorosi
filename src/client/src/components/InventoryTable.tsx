@@ -329,7 +329,7 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                                             value={item.qty}
                                             onChange={(e) => {
                                                 const v = parseInt(e.target.value, 10);
-                                                if (!isNaN(v)) onUpdate(item.id, { qty: v });
+                                                onUpdate(item.id, { qty: isNaN(v) ? 0 : v });
                                             }}
                                             onFocus={() => {
                                                 setActiveInputId(item.id);
