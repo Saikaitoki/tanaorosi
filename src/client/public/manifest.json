@@ -1,6 +1,6 @@
 {
     "name": "棚卸しアプリ",
-    "short_name": "棚卸し",
+    "short_name": "棚卸",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
