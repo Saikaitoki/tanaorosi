@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>棚卸しアプリ 取扱説明書</title>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin-top: 30px;
+            padding-left: 10px;
+            border-left: 5px solid #2563eb;
+            background: #f0f7ff;
+            padding: 10px;
+        }
+
+        h3 {
+            margin-top: 25px;
+            color: #444;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        ul,
+        ol {
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        strong {
+            color: #d946ef;
+            /* Magenta for emphasis matches some app accents or just stands out */
+            color: #e11d48;
+        }
+
+        .note {
+            font-size: 0.9em;
+            color: #666;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        img {
+            max-width: 160px;
+            /* Halved from 320px */
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 10px 0;
+            /* Left align */
+            display: block;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Utility to force full width if needed */
+        img.full-width {
+            max-width: 100%;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                max-width: 100%;
+            }
+
+            h1 {
+                page-break-before: avoid;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>棚卸しアプリ 取扱説明書</h1>
+
+    <p>このアプリは、スマートフォンとバーコードスキャナーを使用して、棚卸作業を行うためのツールです。</p>
+
+    <h2>1. 準備：担当者と場所の設定</h2>
+    <ol>
+        <li>アプリを起動したら、まずは担当者名とロケーションを入力してください。
+            <ul>
+                <li>ロケーションの入力内容は、(セイヨウ、はなわくすい)など管理者が分かるようにしてください。</li>
+            </ul>
+        </li>
+    </ol>
+
+    <img src="images/IMG_4314.PNG" alt="ヘッダー部分">
+
+    <h2>2. 動作モードの設定 (iOS / Android)</h2>
+    <p>使用する端末に合わせて、アプリの動作モードを設定します。画面右上の歯車アイコン⚙️から設定してください。</p>
+
+    <ul>
+        <li><strong>iOSモード</strong>: iPhone/iPad向け。
+            <ul>
+                <li>画面上に専用の大きなテンキーが表示されます。</li>
+                <li>ソフトキーボードが自動で出ないように制御され、スムーズに作業できます。</li>
+            </ul>
+        </li>
+        <li><strong>Androidモード</strong>: Android端末向け。
+            <ul>
+                <li>端末標準のキーボードを使用します（テンキーは表示されません）。</li>
+                <li>外部キーボードやスキャナーの仕様に合わせて使用してください。</li>
+            </ul>
+        </li>
+    </ul>
+
+    <img src="images/IMG_4316.PNG" alt="設定画面">
+
+    <h2>3. 商品の登録手順</h2>
+    <h3>JANコードの入力</h3>
+    <ol>
+        <li><strong>スキャン</strong>: スマートフォンに接続したバーコードリーダーで商品をスキャンします。
+            <ul>
+                <li><strong>ポイント</strong>: 入力欄にカーソルがなくても、そのままスキャンすれば自動的に入力されます。</li>
+            </ul>
+        </li>
+    </ol>
+
+    <img src="images/IMG_4315.PNG" alt="メイン入力フォーム">
+
+    <h3>数量の入力</h3>
+    <p>JANコードが入ると、自動的に「数量」欄に移動します。</p>
+    <ul>
+        <li><strong>初期値</strong>: 空欄（入力待ち）の状態です。</li>
+        <li><strong>入力方法</strong>: 実際の数量を入力し、<strong>確定（Enter）ボタン</strong>を押してください。</li>
+    </ul>
+
+    <img src="images/IMG_4317.PNG" alt="数量入力">
+
+    <p><strong>登録完了</strong>: 数量を確定すると、下のリストに追加されます。</p>
+
+    <h2>4. データの修正と削除</h2>
+    <p>登録したデータはリスト（表）で確認できます。</p>
+
+    <ul>
+        <li><strong>数量の修正</strong>:
+            <br>表の中の「数量」の数字をタップすると、その場で修正が可能です。
+            <br><em>再度 <strong>確定</strong> を押すと修正が反映されます。</em>
+        </li>
+        <li><strong>商品名の修正</strong>:
+            <br>商品名が表示されていない場合や修正したい場合は、名前欄をタップして手入力できます。
+        </li>
+        <li><strong>行の削除</strong>:
+            <br>間違えて登録した場合は、右側のゴミ箱アイコン🗑️をタップして削除します。
+        </li>
+    </ul>
+
+    <img src="images/IMG_4318.PNG" alt="在庫リスト">
+
+    <h2>5. データの送信（完了）</h2>
+    <p>作業が一通り終わったら、画面最下部の「<strong>送信する</strong>」ボタンを押してください。</p>
+    <ul>
+        <li>確認メッセージが表示され「OK」を押すと、データがクラウド（Kintone）へ送信されます。</li>
+        <li>送信成功後、アプリ上のリストはクリアされ、次の作業の準備が整います。</li>
+    </ul>
+
+    <h2>6. 便利な機能</h2>
+    <h3>元に戻す機能</h3>
+    <p>間違えて「削除」や「送信」をしてしまった直後であれば、画面右上の「元に戻す」ボタンで1つ前の状態に戻せます。</p>
+
+    <h3>ホーム画面への追加（インストール）</h3>
+    <p>このアプリは「ホーム画面に追加」することで、普通のアプリのようにアイコンから起動できます。</p>
+    <p><strong>アプリURL:</strong> <a href="https://tanaorosi.onrender.com">https://tanaorosi.onrender.com</a></p>
+    <ul>
+        <li>ブラウザのメニューから「ホーム画面に追加」を選択してください。
+        <li>アイコンには「<strong>棚卸</strong>」の文字が表示されます。</li>
+    </ul>
+
+</body>
+
+</html>

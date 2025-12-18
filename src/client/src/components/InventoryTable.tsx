@@ -211,7 +211,7 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                         <label className="block text-xs font-bold text-gray-500 mb-1">JANコード</label>
                         <input
                             ref={janInputRef}
-                            type="text"
+                            type="number"
                             inputMode="none" // Scanner only!
                             value={jan}
                             onChange={(e) => {
