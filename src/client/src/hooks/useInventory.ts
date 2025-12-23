@@ -75,8 +75,8 @@ export function useInventory() {
         setDeletedItem(null);
     }, [deletedItem]);
 
-    const clearAll = useCallback(() => {
-        if (window.confirm('全てのデータを削除しますか？')) {
+    const clearAll = useCallback((force: boolean = false) => {
+        if (force || window.confirm('全てのデータを削除しますか？')) {
             setItems([]);
             setDeletedItem(null);
         }

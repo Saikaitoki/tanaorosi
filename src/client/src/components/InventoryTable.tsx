@@ -16,7 +16,7 @@ interface Props {
     operatorName: string;
     location: string;
     deviceMode: DeviceMode;
-    onClear: () => void;
+    onClear: (force?: boolean) => void;
 }
 
 export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName, location, deviceMode, onClear }: Props) {
@@ -148,7 +148,7 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
             await sendRecords(items, operatorName, location);
             toast.success('送信しました！');
             resetInput();
-            onClear();
+            onClear(true);
         } catch (e: any) {
             toast.error(`送信失敗: ${e.message}`);
         } finally {
@@ -161,6 +161,14 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
         if (activeInputId) {
             // Edit existing item
             let next = editValue + char;
+
+            // Check length limit (6 or more -> clear)
+            if (next.length >= 6) {
+                setEditValue('');
+                onUpdate(activeInputId, { qty: 0 });
+                return;
+            }
+
             // Sanitize leading zero (e.g. "05" -> "5")
             if (next.length > 1 && next.startsWith('0')) {
                 next = next.replace(/^0+/, '');
@@ -173,7 +181,11 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
             }
         } else {
             // Add new item
-            setQty(prev => prev + char);
+            setQty(prev => {
+                const next = prev + char;
+                if (next.length >= 6) return '';
+                return next;
+            });
         }
     };
     const onNumpadBackspace = () => {
@@ -253,7 +265,14 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                                     setShowNumpad(true);
                                 }
                             }}
-                            onChange={(e) => setQty(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (val.length >= 6) {
+                                    setQty('');
+                                } else {
+                                    setQty(val);
+                                }
+                            }}
                             onKeyDown={handleQtyKeyDown}
                             onClick={() => {
                                 if (deviceMode === 'ios') setShowNumpad(true);
@@ -332,6 +351,12 @@ export function InventoryTable({ items, onAdd, onUpdate, onDelete, operatorName,
                                             value={activeInputId === item.id ? editValue : item.qty}
                                             onChange={(e) => {
                                                 let v = e.target.value;
+                                                // Check length limit
+                                                if (v.length >= 6) {
+                                                    setEditValue('');
+                                                    onUpdate(item.id, { qty: 0 });
+                                                    return;
+                                                }
                                                 // Sanitize leading zero
                                                 if (v.length > 1 && v.startsWith('0')) {
                                                     v = v.replace(/^0+/, '');

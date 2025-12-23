@@ -68,7 +68,7 @@ function App() {
             )}
             {items.length > 0 && (
               <button
-                onClick={clearAll}
+                onClick={() => clearAll()}
                 className="px-3 py-1 bg-gray-200 text-gray-600 rounded text-sm hover:bg-gray-300 transition-colors"
               >
                 全削除
